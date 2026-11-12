@@ -39,7 +39,8 @@ with get_db() as db:
         college TEXT
     )""")
 
-
+print("BREVO KA JAWAB:",r.text)
+r.raise_for_status()
 def send_email(to_email, otp):
     r = requests.post(
         "https://api.brevo.com/v3/smtp/email",
