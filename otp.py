@@ -2,7 +2,6 @@ import os
 import requests
 import secrets
 import time
-import threading
 import sqlite3
 
 from dotenv import load_dotenv
@@ -15,8 +14,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, "otp.env"))
 
-EMAIL = os.getenv("BOOKBUY_EMAIL")
-BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+APPS_SCRIPT_URL = os.getenv("APPS_SCRIPT_URL")
+MAIL_SECRET = os.getenv("MAIL_SECRET")
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 app = Flask(__name__)
@@ -46,41 +45,31 @@ with get_db() as db:
     """)
 
 
-# Send email using Brevo
+# Send email using Google Apps Script (free, works on Render free plan)
 def send_email(to_email, otp):
 
-    if not BREVO_API_KEY or not EMAIL:
-        raise ValueError("Brevo API configuration missing")
+    if not APPS_SCRIPT_URL or not MAIL_SECRET:
+        raise ValueError("Mail configuration missing")
 
     response = requests.post(
-        "https://api.brevo.com/v3/smtp/email",
-
-        headers={
-            "accept": "application/json",
-            "api-key": BREVO_API_KEY,
-            "content-type": "application/json"
-        },
-
+        APPS_SCRIPT_URL,
         json={
-            "sender": {
-                "email": EMAIL,
-                "name": "BookBuy"
-            },
-            "to": [
-                {"email": to_email}
-            ],
+            "secret": MAIL_SECRET,
+            "to": to_email,
             "subject": "Your BookBuy OTP",
-            "textContent": (
+            "text": (
                 f"Your BookBuy OTP is {otp}. "
                 "It is valid for 5 minutes. "
                 "Do not share it with anyone."
             )
         },
-
-        timeout=15
+        timeout=20
     )
 
     response.raise_for_status()
+
+    if response.text.strip() != "ok":
+        raise RuntimeError(f"Mail failed: {response.text[:200]}")
 
 
 @app.route("/")
