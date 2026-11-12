@@ -1,5 +1,5 @@
 import os
-import threading
+import requests
 import secrets
 import smtplib
 import time
@@ -41,18 +41,21 @@ with get_db() as db:
 
 
 def send_email(to_email, otp):
-    msg = EmailMessage()
-    msg["Subject"] = "Your BookBuy OTP"
-    msg["From"] = EMAIL
-    msg["To"] = to_email
-    msg.set_content(
-        f"Your BookBuy OTP is {otp}. It is valid for 5 minutes. "
-        "Do not share it with anyone."
+    r = requests.post(
+        "https://api.brevo.com/v3/smtp/email",
+        headers={
+            "api-key": os.environ.get("BREVO_API_KEY"),
+            "content-type": "application/json",
+        },
+        json={
+            "sender": {"email": EMAIL, "name": "BookBuy"},
+            "to": [{"email": to_email}],
+            "subject": "Your BookBuy OTP",
+            "textContent": f"Your BookBuy OTP is {otp}. It is valid for 5 minutes. Do not share it with anyone.",
+        },
+        timeout=15,
     )
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(EMAIL, APP_PASSWORD)
-        server.send_message(msg)
-
+    r.raise_for_status()
 
 @app.route("/")
 def home():
