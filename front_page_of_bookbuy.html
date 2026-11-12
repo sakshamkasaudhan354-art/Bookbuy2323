@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="logo.jpeg">
+
+<title>Bookbuy | Your Academic Companion</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f6f8fc;
+    color: #17233c;
+}
+
+/* NAVBAR */
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 7%;
+    background: white;
+    box-shadow: 0 2px 10px #00000008;
+}
+
+.logo {
+    font-size: 27px;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #344054;
+    font-size: 15px;
+}
+
+.login {
+    padding: 10px 20px;
+    border: 1px solid #2563eb;
+    border-radius: 7px;
+    color: #2563eb !important;
+}
+
+/* HERO SECTION */
+
+.hero {
+    text-align: center;
+    padding: 85px 20px;
+    background: linear-gradient(135deg, #eaf1ff, #f8faff);
+}
+
+.hero h1 {
+    font-size: 45px;
+    margin-bottom: 18px;
+}
+
+.hero h1 span {
+    color: #2563eb;
+}
+
+.hero p {
+    color: #667085;
+    font-size: 17px;
+    margin-bottom: 30px;
+}
+
+.search-box {
+    max-width: 650px;
+    margin: auto;
+    display: flex;
+    background: white;
+    padding: 8px;
+    border-radius: 10px;
+    box-shadow: 0 5px 25px #00000012;
+}
+
+.search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 12px;
+    font-size: 15px;
+    min-width: 0;
+}
+
+.search-box button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 13px 23px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+/* COMMON SECTION */
+
+.section {
+    padding: 55px 7%;
+}
+
+.section h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #667085;
+    margin-bottom: 30px;
+}
+
+/* CARDS */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+.card {
+    background: white;
+    padding: 27px;
+    border-radius: 12px;
+    border: 1px solid #e8edf5;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px #00000010;
+}
+
+.card .icon {
+    font-size: 35px;
+    margin-bottom: 15px;
+}
+
+.card h3 {
+    margin-bottom: 10px;
+}
+
+.card p {
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* UNIVERSITIES */
+
+.universities {
+    background: white;
+}
+
+.uni-card {
+    display: block;
+    background: #f8faff;
+    padding: 28px;
+    text-align: center;
+    border-radius: 12px;
+    border: 1px solid #e5eaf5;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.uni-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 25px #00000012;
+    border-color: #2563eb;
+}
+
+.uni-card h3 {
+    color: #2563eb;
+    margin-bottom: 10px;
+    font-size: 23px;
+}
+
+.uni-card p {
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.uni-card span {
+    display: inline-block;
+    margin-top: 17px;
+    color: #2563eb;
+    font-weight: bold;
+}
+
+/* FOOTER */
+
+footer {
+    background: #17233c;
+    color: white;
+    padding: 35px 7%;
+    text-align: center;
+}
+
+footer p {
+    color: #c5cede;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 700px) {
+
+    nav {
+        padding: 17px 5%;
+    }
+
+    .nav-links {
+        gap: 10px;
+    }
+
+    .nav-links a {
+        font-size: 12px;
+    }
+
+    .hero h1 {
+        font-size: 32px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .search-box button {
+        padding: 12px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<nav>
+
+    <div class="logo" style="display:flex; align-items:center; gap:10px;">
+  <img src="logo.jpeg" alt="Bookbuy logo" style="height:45px; width:auto; border-radius:8px;">
+  <span>Bookbuy</span>
+</div>
+
+    <div class="nav-links">
+        <a href="#home">Home</a>
+        <a href="#resources">Resources</a>
+        <a href="#universities">Universities</a>
+        <a href="Sign_up.html" class="login">Sign up</a>
+    </div>
+
+</nav>
+
+
+
+<section class="hero" id="home">
+    <center>
+      <img src="logo.jpeg" alt="bookbuy logo" width="300"  
+    </center>
+    
+
+    <h1>Learn Smarter with <span>Bookbuy</span></h1>
+
+    <p>
+        <span style="margin: left 300px;"> 
+            <Span style="font-size: 40px;">
+            Your Digital Academic Library</span>
+            </span>
+
+    </p>
+
+    <div class="search-box" style="margin-top: 50px;"> 
+
+        <input
+            type="text"
+            id="search"
+            placeholder="Search books, subjects or PYQs..."
+        >
+
+        <button onclick="searchResource()">
+            Search
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- RESOURCES -->
+
+<section class="section" id="resources">
+
+    <h2>Explore Resources</h2>
+
+    <p class="subtitle">
+        Everything you need for your Exam preparation.
+    </p>
+
+    <div class="cards">
+
+        <div class="card">
+            <div class="icon">📚</div>
+
+            <h3>Digital library</h3>
+
+            <p>
+                Explore available open-access
+                academic books and study material.
+            </p>
+        </div>
+
+
+        <div class="card">
+            <div class="icon">📝</div>
+
+            <h3>Previous Year Questions</h3>
+
+            <p>
+                Find university-wise and
+                semester-wise previous year papers.
+            </p>
+        </div>
+
+
+        <div class="card">
+            <div class="icon">📖</div>
+
+            <h3>Notes & Study Material</h3>
+
+            <p>
+                Access subject-wise notes or toppers hand wriiten notes
+                or useful learning resources.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- UNIVERSITIES -->
+
+<section class="section universities" id="universities">
+
+    <h2>Choose Your University</h2>
+
+    <p class="subtitle">
+        Find resources according to your university.
+    </p>
+
+    <div class="cards">
+
+        <a href="login.html?next=aktu_1.html" class="uni-card">
+         
+
+            <h3>AKTU</h3>
+
+            <p>
+                Dr. A.P.J. Abdul Kalam Technical University
+                
+            </p>
+
+            <span>Explore Resources →</span>
+
+        </a>
+    
+
+
+        <a href="login.html?next=lu_1.html" class="uni-card">
+
+            <h3>LU</h3>
+
+            <p>
+                University of Lucknow
+            </p>
+
+
+            <span>Explore Resources →</span>
+
+        </a>
+
+
+        <a href="login.html?next=bbd_1.html" class="uni-card">
+
+            <h3>BBD</h3>
+
+            <p>
+                Babu Banarasi Das University
+            </p>
+
+            <span>Explore Resources →</span>
+
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- FOOTER -->
+
+<footer>
+
+    <h2>Bookbuy</h2>
+
+    <p>Your Academic Companion</p>
+
+    <p>© 2026 Bookbuy. All rights reserved.</p>
+
+</footer>
+
+
+<!-- JAVASCRIPT -->
+
+<script>
+
+function searchResource() {
+
+    let value = document.getElementById("search").value.trim();
+
+    if (value === "") {
+
+        alert("Please enter something to search!");
+
+    } else {
+
+        alert("Search feature will be connected soon: " + value);
+
+    }
+
+}
+
+</script>
+<script src="script.js"></script>
+</body>
+</html>
