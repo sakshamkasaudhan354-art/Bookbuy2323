@@ -14,8 +14,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, "otp.env"))
 
-APPS_SCRIPT_URL = os.getenv("APPS_SCRIPT_URL")
-MAIL_SECRET = os.getenv("MAIL_SECRET")
+APPS_SCRIPT_URL = (os.getenv("APPS_SCRIPT_URL") or "").strip()
+MAIL_SECRET = (os.getenv("MAIL_SECRET") or "").strip().strip(chr(34)).strip(chr(39))
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 app = Flask(__name__)
@@ -69,7 +69,7 @@ def send_email(to_email, otp):
     response.raise_for_status()
 
     if response.text.strip() != "ok":
-        raise RuntimeError(f"Mail failed: {response.text[:200]}")
+        raise RuntimeError(f"Mail failed: {response.text[:200]} (my secret length: {len(MAIL_SECRET)})")
 
 
 @app.route("/")
