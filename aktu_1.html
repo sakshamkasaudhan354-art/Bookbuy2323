@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKTU PYQ | Bookbuy</title>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: #f4f6fb; color: #222; }
+
+header { background: #172554; color: white; padding: 18px 6%; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 25px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+.logo span { color: #60a5fa; }
+.nav-btns { display: flex; gap: 10px; }
+.nav-btn { background: white; color: #172554; border: none; padding: 9px 16px; border-radius: 7px; cursor: pointer; font-weight: bold; font-size: 14px; text-decoration: none; }
+
+.container { width: 90%; max-width: 1050px; margin: 35px auto; }
+.heading { text-align: center; margin-bottom: 25px; }
+.heading h1 { color: #172554; margin-bottom: 8px; }
+.heading p { color: #666; }
+
+.section-title { margin: 25px 0 15px; color: #172554; }
+.sub-title { margin: 28px 0 12px; color: #1d4ed8; border-bottom: 2px solid #dbeafe; padding-bottom: 6px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.item { background: white; padding: 22px; border-radius: 12px; border: 1px solid #e1e5ee; cursor: pointer; transition: 0.2s; }
+.item:hover { transform: translateY(-3px); border-color: #2563eb; box-shadow: 0 5px 18px #00000010; }
+.item h3 { color: #172554; margin-bottom: 7px; }
+.item p { color: #777; font-size: 13px; }
+
+.question-card { background: white; padding: 18px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #e1e5ee; }
+.q-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.q-body { flex: 1; min-width: 0; }
+.q-body h3 { color: #172554; font-size: 16px; margin-bottom: 8px; }
+.q-body p { line-height: 1.6; color: #444; }
+.ans-btn { flex: 0 0 auto; background: #2563eb; color: white; border: none; padding: 9px 14px; border-radius: 7px; cursor: pointer; font-weight: bold; font-size: 13px; }
+.ans-btn:hover { background: #1d4ed8; }
+.answer-box { margin-top: 12px; padding: 14px; background: #e6f9ec; border-left: 4px solid #22a55b; border-radius: 8px; line-height: 1.7; color: #333; white-space: pre-wrap; }
+.answer-box b { color: #166534; }
+.badge { display: inline-block; background: #dbeafe; color: #1d4ed8; padding: 5px 9px; border-radius: 5px; font-size: 12px; margin-bottom: 10px; }
+
+.hidden { display: none; }
+.empty { background: white; text-align: center; padding: 35px 15px; border-radius: 12px; color: #777; }
+.breadcrumb { margin: 15px 0 20px; color: #555; font-size: 14px; }
+footer { text-align: center; padding: 25px; color: #777; margin-top: 50px; }
+
+/* ===== PREMIUM BUTTON + POPUP ===== */
+.premium-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: linear-gradient(90deg, #0f172a, #1e3a5f); color: white; padding: 14px 18px; border-radius: 12px; margin-bottom: 15px; }
+.premium-bar span { font-size: 15px; }
+.premium-open { background: #00b4d8; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+.premium-open:hover { background: #0096b4; }
+
+.pm-overlay { position: fixed; inset: 0; background: #000000b8; display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
+.pm-overlay.show { display: flex; }
+.pm-box { background: #1e293b; color: white; width: 100%; max-width: 380px; border-radius: 18px; padding: 30px 26px; text-align: center; box-shadow: 0 10px 40px #0008; max-height: 92vh; overflow: auto; position: relative; }
+.pm-close { position: absolute; top: 10px; right: 14px; background: none; border: none; color: #94a3b8; font-size: 26px; cursor: pointer; }
+.pm-box h2 { color: #00b4d8; font-size: 26px; margin-bottom: 8px; }
+.pm-sub { color: #e2e8f0; font-size: 15px; margin-bottom: 18px; }
+.pm-benefits { list-style: none; text-align: left; margin: 0 0 20px; padding: 0; }
+.pm-benefits li { padding: 8px 0; font-size: 15px; color: #e2e8f0; border-bottom: 1px solid #ffffff14; }
+.pm-benefits li::before { content: "✔"; color: #22c55e; font-weight: bold; margin-right: 10px; }
+.pm-price { font-size: 44px; font-weight: bold; margin: 10px 0 4px; }
+.pm-once { color: #cbd5e1; margin-bottom: 18px; font-size: 15px; }
+.pm-pay { width: 100%; padding: 14px; border: none; border-radius: 8px; background: #00b4d8; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+.pm-pay:hover { background: #0096b4; }
+
+@media (max-width: 600px) {
+    .container { width: 92%; }
+    header { padding: 15px 4%; }
+    .logo { font-size: 21px; }
+    .nav-btn { padding: 8px 12px; }
+    .q-row { flex-direction: column; }
+    .ans-btn { align-self: flex-start; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">
+        <img src="logo.jpeg" alt="Bookbuy logo" style="height:45px; width:auto; border-radius:8px;">
+        <div>Book<span>buy</span></div>
+    </div>
+    <div class="nav-btns">
+        <a class="nav-btn" href="after_direct_login.html">🏠 Home</a>
+        <button class="nav-btn" onclick="goBack()">← Back</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="heading">
+        <h1>AKTU Previous Year Questions</h1>
+        <p>Year → Branch → PYQ Year (2015 – 2025) → Questions.</p>
+    </div>
+
+    <!-- PREMIUM BUTTON -->
+    <div class="premium-bar">
+        <span>⭐ <b>Bookbuy Premium Version</b> — Solutions aur extra resources's unlock</span>
+        <button class="premium-open" onclick="openPremium()">Premium</button>
+    </div>
+
+    <!-- 0. STUDY YEAR (1st, 2nd, 3rd, 4th) -->
+    <section id="studyYearSection">
+        <h2 class="section-title">Select Your Year</h2>
+        <div class="grid" id="studyYearGrid"></div>
+    </section>
+
+    <!-- 1. BRANCH -->
+    <section id="branchSection" class="hidden">
+        <h2 class="section-title">Select Your Branch</h2>
+        <div class="grid" id="branchGrid"></div>
+    </section>
+
+    <!-- 2. SPECIALISATION -->
+    <section id="specialSection" class="hidden">
+        <h2 class="section-title">Select Specialisation</h2>
+        <div class="grid" id="specialGrid"></div>
+    </section>
+
+    <!-- 3. YEAR -->
+    <section id="yearSection" class="hidden">
+        <h2 class="section-title">Select PYQ Year</h2>
+        <div class="grid" id="yearGrid"></div>
+    </section>
+
+    <!-- 4. PYQ (Short + Long ek saath) -->
+    <section id="questionSection" class="hidden">
+        <h2 class="section-title" id="questionHeading"></h2>
+        <div id="questionList"></div>
+    </section>
+
+</div>
+
+<!-- PREMIUM POPUP -->
+<div class="pm-overlay" id="pmOverlay">
+    <div class="pm-box">
+        <button class="pm-close" onclick="closePremium()" aria-label="Close">&times;</button>
+        <h2>Bookbuy Premium</h2>
+        <p class="pm-sub">Unlock Premium PYQ Resources</p>
+
+        <ul class="pm-Benefits" id="pmBenefits"></ul>
+    <div class="pm-Price" id="pmPrice"></div>
+        <p class="pm-once">One-time payment</p>
+        <button class="pm-pay" id="pmPay" onclick="goToPayment()"></button>
+    </div>
+</div>
+
+<footer>© 2026 Bookbuy | Your Academic Companion</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   PREMIUM SETTINGS  (yahan badlo)
+   ============================================================ */
+const PREMIUM_PRICE = 50;               // price (₹)
+const PAYMENT_PAGE  = "payment.html";   // Pay button dabane par yeh page khulega
+
+/* Premium ke fayde — yahan apne hisaab se likho / badlo / add karo */
+const PREMIUM_BENEFITS = [
+    "Semster wise pyq with solutions",
+    "Unit wise short and long questions",
+    "Imp Exam orinted qquestions with solutions",
+    "topppers Notes",
+];
+
+function openPremium() {
+    $("pmBenefits").innerHTML = PREMIUM_BENEFITS.map(b => `<li>${esc(b)}</li>`).join("");
+    $("pmPrice").textContent = "₹" + PREMIUM_PRICE;
+    $("pmPay").textContent = "Pay ₹" + PREMIUM_PRICE + " Now";
+    $("pmOverlay").classList.add("show");
+}
+function closePremium() { $("pmOverlay").classList.remove("show"); }
+function goToPayment() { window.location.href = PAYMENT_PAGE; }
+$("pmOverlay").addEventListener("click", e => { if (e.target.id === "pmOverlay") closePremium(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePremium(); });
+
+const esc = t => String(t)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/* ---------- BRANCHES + SPECIALISATIONS ---------- */
+const branches = {
+    "CSE": ["CSE Core", "CSE AI & ML", "CSE Data Science", "CSE Cyber Security", "CSE AI/ML"],
+    "IT": [],
+    "ECE": [],
+    "EE": [],
+    "Mechanical": [],
+    "Civil": [],
+    "Chemical": [],
+    "Biotechnology": []
+};
+
+/* ---------- STUDY YEARS ---------- */
+const STUDY_YEARS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+
+/* ---------- PYQ YEARS: 2015 to 2025 ---------- */
+const YEARS = [];
+for (let y = 2015; y <= 2025; y++) YEARS.push(String(y));
+
+/* ---------- PYQ DATABASE ----------
+   addPYQ(studyYear, branch, specialisation, pyqYear, {
+       short: [ { q: "Question", a: "Answer" } ],
+       long:  [ { q: "Question", a: "Answer" } ]
+   });
+
+   Specialisation na ho (jaise IT, ECE) to "" likho.
+   studyYear = 1, 2, 3 ya 4 (number)
+   Example: addPYQ(2, "IT", "", "2024", { short: [...], long: [...] });
+*/
+const PYQ = {};
+const keyOf = (study, branch, special, year) => [study, branch, special, year].join("|");
+function addPYQ(study, branch, special, year, data) { PYQ[keyOf(study, branch, special, year)] = data; }
+
+/* ---------- ADD QUESTIONS HERE ---------- */
+
+addPYQ(1, "CSE", "CSE Core", "2025", {
+    short: [
+        { q: "Define data structure.",
+          a: "Data structure data ko memory mein store aur organize karne ka ek tarika hai, taaki use efficiently access aur modify kiya ja sake. Jaise: array, stack, queue, linked list." },
+        { q: "What is an algorithm?",
+          a: "Algorithm kisi problem ko solve karne ke liye step-by-step finite instructions ka set hota hai, jo input leke output deta hai." },
+        { q: "Define time complexity.",
+          a: "Time complexity batati hai ki input size (n) badhne par algorithm ko run hone mein kitna time lagega. Ise Big-O notation mein likhte hain, jaise O(n), O(log n)." },
+        { q: "What is a stack?",
+          a: "Stack ek linear data structure hai jo LIFO (Last In First Out) principle follow karta hai. Operations: push, pop, peek." },
+        { q: "What is a queue?",
+          a: "Queue ek linear data structure hai jo FIFO (First In First Out) principle follow karta hai. Operations: enqueue, dequeue." }
+    ],
+    long: [
+        { q: "Explain different types of data structures with examples.",
+          a: "1. Primitive: int, float, char.\n2. Non-primitive:\n   - Linear: Array, Linked List, Stack, Queue.\n   - Non-linear: Tree, Graph.\nLinear mein elements sequence mein hote hain, non-linear mein hierarchical ya network form mein." },
+        { q: "Explain stack operations with suitable examples.",
+          a: "Push: top par element add karna.\nPop: top ka element remove karna.\nPeek: top element dekhna bina hataye.\nisEmpty / isFull: stack khali ya bhara check karna.\nExample: push(10), push(20), pop() -> 20 nikalega." },
+        { q: "Discuss different sorting techniques.",
+          a: "Bubble Sort: O(n^2), adjacent elements swap.\nSelection Sort: O(n^2), minimum select karke place karna.\nInsertion Sort: O(n^2), sorted part mein insert karna.\nMerge Sort: O(n log n), divide and conquer.\nQuick Sort: average O(n log n), pivot based partition." },
+        { q: "Explain the concept of linked lists.",
+          a: "Linked list nodes ki chain hoti hai jisme har node mein data aur next node ka pointer hota hai.\nTypes: Singly, Doubly, Circular.\nFayda: dynamic size, easy insertion/deletion. Nuksan: random access nahi, extra memory pointer ke liye." }
+    ]
+});
+
+addPYQ(2, "CSE", "CSE AI & ML", "2025", {
+    short: [
+        { q: "Define Artificial Intelligence.",
+          a: "AI computer science ki wo branch hai jisme machines ko insaan jaisi soch, seekhne aur decision lene ki ability di jaati hai." },
+        { q: "What is Machine Learning?",
+          a: "Machine Learning AI ka part hai jisme machine data se khud seekhti hai bina explicitly program kiye." },
+        { q: "Define supervised learning.",
+          a: "Supervised learning mein model ko labeled data (input + correct output) se train kiya jaata hai. Example: classification, regression." },
+        { q: "What is a neural network?",
+          a: "Neural network insaani brain se inspired model hai jisme neurons ki layers (input, hidden, output) hoti hain jo data se patterns seekhti hain." }
+    ],
+    long: [
+        { q: "Explain the different types of Machine Learning.",
+          a: "1. Supervised Learning: labeled data.\n2. Unsupervised Learning: unlabeled data, patterns/clusters dhundhna.\n3. Semi-supervised Learning: thoda labeled + zyada unlabeled data.\n4. Reinforcement Learning: agent reward/penalty se seekhta hai." },
+        { q: "Discuss the applications of Artificial Intelligence.",
+          a: "Healthcare (disease diagnosis), Finance (fraud detection), Education (personalized learning), Transport (self-driving cars), E-commerce (recommendation), Voice assistants, Robotics, Agriculture." },
+        { q: "Explain supervised and unsupervised learning.",
+          a: "Supervised: labeled data, output pehle se pata hota hai. Algorithms: Linear Regression, Decision Tree, SVM.\nUnsupervised: unlabeled data, model khud pattern dhundhta hai. Algorithms: K-Means, PCA.\nFark: supervised mein teacher (labels) hota hai, unsupervised mein nahi." }
+    ]
+});
+
+/* ---------- STATE ---------- */
+let selectedStudy = 0;     // 1, 2, 3, 4
+let selectedBranch = "";
+let selectedSpecial = "";
+let selectedYear = "";
+
+const SECTIONS = ["studyYearSection", "branchSection", "specialSection", "yearSection", "questionSection"];
+
+function showSection(id) {
+    SECTIONS.forEach(s => $(s).classList.toggle("hidden", s !== id));
+    window.scrollTo(0, 0);
+}
+function visibleSection() { return SECTIONS.find(s => !$(s).classList.contains("hidden")); }
+function setBreadcrumb(...parts) { $("breadcrumb").textContent = ["Home", ...parts.filter(Boolean)].join(" → "); }
+
+function makeItem(grid, title, sub, onClick) {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `<h3>${esc(title)}</h3><p>${esc(sub)}</p>`;
+    div.onclick = onClick;
+    grid.appendChild(div);
+}
+
+/* ---------- FLOW ----------
+   Branch -> (Specialisation) -> Year -> PYQ (Short + Long) */
+
+function showStudyYears() {
+    const grid = $("studyYearGrid");
+    grid.innerHTML = "";
+    STUDY_YEARS.forEach((y, i) =>
+        makeItem(grid, y, "Select " + y, () => { selectedStudy = i + 1; showBranches(); }));
+    showSection("studyYearSection");
+    setBreadcrumb();
+}
+
+const studyLabel = () => STUDY_YEARS[selectedStudy - 1];
+
+function showBranches() {
+    const grid = $("branchGrid");
+    grid.innerHTML = "";
+    Object.keys(branches).forEach(b =>
+        makeItem(grid, b, "Select " + b + " branch", () => selectBranch(b)));
+    showSection("branchSection");
+    setBreadcrumb(studyLabel());
+}
+
+function selectBranch(branch) {
+    selectedBranch = branch;
+    selectedSpecial = "";
+    branches[branch].length ? showSpecialisations() : showYears();
+}
+
+function showSpecialisations() {
+    const grid = $("specialGrid");
+    grid.innerHTML = "";
+    branches[selectedBranch].forEach(s =>
+        makeItem(grid, s, "Select " + s, () => {
+            selectedSpecial = s;
+            showYears();
+        }));
+    showSection("specialSection");
+    setBreadcrumb(studyLabel(), selectedBranch);
+}
+
+function showYears() {
+    const grid = $("yearGrid");
+    grid.innerHTML = "";
+    [...YEARS].sort((a, b) => b - a).forEach(y =>
+        makeItem(grid, y, "View " + y + " questions", () => selectYear(y)));
+    showSection("yearSection");
+    setBreadcrumb(studyLabel(), selectedBranch, selectedSpecial);
+}
+
+function selectYear(year) {
+    selectedYear = year;
+    showQuestions();
+}
+
+/* Short ya Long ki list banata hai */
+function renderCards(parent, questions) {
+    questions.forEach((item, i) => {
+        const card = document.createElement("div");
+        card.className = "question-card";
+        card.innerHTML = `
+            <span class="badge">Question ${i + 1}</span>
+            <div class="q-row">
+                <div class="q-body">
+                    <h3>Q${i + 1}.</h3>
+                    <p>${esc(item.q)}</p>
+                </div>
+                <button class="ans-btn">Show Answer</button>
+            </div>
+            <div class="answer-box hidden"><b>Answer:</b> ${esc(item.a || "Answer coming soon.")}</div>
+        `;
+
+        const btn = card.querySelector(".ans-btn");
+        const box = card.querySelector(".answer-box");
+        btn.onclick = () => {
+            const open = box.classList.toggle("hidden") === false;
+            btn.textContent = open ? "Hide Answer" : "Show Answer";
+        };
+        parent.appendChild(card);
+    });
+}
+
+function showQuestions() {
+    const list = $("questionList");
+    const data = PYQ[keyOf(selectedStudy, selectedBranch, selectedSpecial, selectedYear)] || {};
+    const shortQ = data.short || [];
+    const longQ = data.long || [];
+
+    $("questionHeading").textContent =
+        [studyLabel(), selectedBranch, selectedSpecial].filter(Boolean).join(" – ") + " | " + selectedYear + " PYQ";
+    list.innerHTML = "";
+    showSection("questionSection");
+    setBreadcrumb(studyLabel(), selectedBranch, selectedSpecial, selectedYear);
+
+    if (shortQ.length === 0 && longQ.length === 0) {
+        list.innerHTML = `
+            <div class="empty">
+                <h3>Questions Coming Soon!</h3>
+                <p>We are adding PYQ questions for this section.</p>
+            </div>`;
+        return;
+    }
+
+    if (shortQ.length) {
+        const h = document.createElement("h3");
+        h.className = "sub-title";
+        h.textContent = "Short Questions";
+        list.appendChild(h);
+        renderCards(list, shortQ);
+    }
+    if (longQ.length) {
+        const h = document.createElement("h3");
+        h.className = "sub-title";
+        h.textContent = "Long Questions";
+        list.appendChild(h);
+        renderCards(list, longQ);
+    }
+}
+
+/* ---------- BACK ---------- */
+function goBack() {
+    switch (visibleSection()) {
+        case "questionSection": showYears(); break;
+        case "yearSection": selectedSpecial ? showSpecialisations() : showBranches(); break;
+        case "specialSection": showBranches(); break;
+        case "branchSection": showStudyYears(); break;
+    }
+}
+
+showStudyYears();
+</script>
+
+</body>
+</html>
