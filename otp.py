@@ -2,7 +2,7 @@ import os
 import requests
 import secrets
 import time
-import sqlite3
+import psycopg2
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -17,6 +17,7 @@ load_dotenv(os.path.join(BASE_DIR, "otp.env"))
 APPS_SCRIPT_URL = (os.getenv("APPS_SCRIPT_URL") or "").strip()
 MAIL_SECRET = (os.getenv("MAIL_SECRET") or "").strip().strip(chr(34)).strip(chr(39))
 SECRET_KEY = os.getenv("SECRET_KEY")
+DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -29,20 +30,28 @@ otp_store = {}
 verified_emails = {}
 
 
-def get_db():
-    return sqlite3.connect(os.path.join(BASE_DIR, "users.db"))
+def db_run(query, params=(), fetch=False):
+    conn = psycopg2.connect(DATABASE_URL)
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                if fetch:
+                    return cur.fetchone()
+                return cur.rowcount
+    finally:
+        conn.close()
 
 
-# Create database
-with get_db() as db:
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            email TEXT PRIMARY KEY,
-            password_hash TEXT NOT NULL,
-            university TEXT,
-            college TEXT
-        )
-    """)
+# Create table (permanent database, data nahi udega)
+db_run("""
+    CREATE TABLE IF NOT EXISTS users (
+        email TEXT PRIMARY KEY,
+        password_hash TEXT NOT NULL,
+        university TEXT,
+        college TEXT
+    )
+""")
 
 
 # Send email using Google Apps Script (free, works on Render free plan)
@@ -193,22 +202,13 @@ def register():
         }), 403
 
     try:
-        with get_db() as db:
-            db.execute(
-                """
-                INSERT INTO users
-                (email, password_hash, university, college)
-                VALUES (?, ?, ?, ?)
-                """,
-                (
-                    email,
-                    generate_password_hash(password),
-                    university,
-                    college
-                )
-            )
+        db_run(
+            "INSERT INTO users (email, password_hash, university, college) "
+            "VALUES (%s, %s, %s, %s)",
+            (email, generate_password_hash(password), university, college)
+        )
 
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         return jsonify({
             "success": False,
             "message": "Email already registered"
@@ -231,11 +231,11 @@ def login():
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
 
-    with get_db() as db:
-        row = db.execute(
-            "SELECT password_hash, university FROM users WHERE email = ?",
-            (email,)
-        ).fetchone()
+    row = db_run(
+        "SELECT password_hash, university FROM users WHERE email = %s",
+        (email,),
+        fetch=True
+    )
 
     if not row or not check_password_hash(row[0], password):
         return jsonify({
@@ -257,11 +257,11 @@ def forgot_send_otp():
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
 
-    with get_db() as db:
-        user = db.execute(
-            "SELECT 1 FROM users WHERE email = ?",
-            (email,)
-        ).fetchone()
+    user = db_run(
+        "SELECT 1 FROM users WHERE email = %s",
+        (email,),
+        fetch=True
+    )
 
     if not user:
         return jsonify({
@@ -318,13 +318,12 @@ def reset_password():
             "message": "Pehle OTP verify karo"
         }), 403
 
-    with get_db() as db:
-        cur = db.execute(
-            "UPDATE users SET password_hash = ? WHERE email = ?",
-            (generate_password_hash(password), email)
-        )
+    updated = db_run(
+        "UPDATE users SET password_hash = %s WHERE email = %s",
+        (generate_password_hash(password), email)
+    )
 
-    if cur.rowcount == 0:
+    if updated == 0:
         return jsonify({
             "success": False,
             "message": "Account nahi mila"
