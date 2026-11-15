@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import secrets
 import time
@@ -7,6 +8,7 @@ import psycopg2
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from itsdangerous import URLSafeTimedSerializer, BadSignature
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -19,9 +21,20 @@ MAIL_SECRET = (os.getenv("MAIL_SECRET") or "").strip().strip(chr(34)).strip(chr(
 SECRET_KEY = os.getenv("SECRET_KEY")
 DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
 
+# ---- PREMIUM SETTINGS ----
+# Admin wahi hai jo is email se login kare (Render > Environment mein ADMIN_EMAIL se badal sakte ho)
+ADMIN_EMAIL = (os.getenv("ADMIN_EMAIL") or "bookbuy2323@gmail.com").strip().lower()
+PREMIUM_PRICE = 50
+TOKEN_MAX_AGE = 60 * 60 * 24 * 30   # login token 30 din chalega
+
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 CORS(app)
+
+if not SECRET_KEY:
+    print("WARNING: SECRET_KEY missing. Premium login token band rahega.")
+
+serializer = URLSafeTimedSerializer(SECRET_KEY, salt="bookbuy-auth") if SECRET_KEY else None
 
 OTP_VALID_SECONDS = 300
 MAX_ATTEMPTS = 5
@@ -36,6 +49,8 @@ def db_run(query, params=(), fetch=False):
         with conn:
             with conn.cursor() as cur:
                 cur.execute(query, params)
+                if fetch == "all":
+                    return cur.fetchall()
                 if fetch:
                     return cur.fetchone()
                 return cur.rowcount
@@ -52,6 +67,54 @@ db_run("""
         college TEXT
     )
 """)
+
+# Premium: users table mein naya column (pehle se hai to kuch nahi hoga)
+db_run("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE")
+
+# Premium: payment requests
+db_run("""
+    CREATE TABLE IF NOT EXISTS payment_requests (
+        email TEXT PRIMARY KEY,
+        utr TEXT UNIQUE NOT NULL,
+        amount INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+""")
+
+
+# ---------- LOGIN TOKEN HELPERS ----------
+def current_email():
+    """Request ke Authorization header se logged-in email nikalta hai."""
+    if not serializer:
+        return None
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        return None
+    try:
+        data = serializer.loads(header[7:], max_age=TOKEN_MAX_AGE)
+    except BadSignature:
+        return None
+    return data.get("email")
+
+
+def auth_error():
+    return jsonify({
+        "success": False,
+        "message": "Pehle login karo"
+    }), 401
+
+
+def require_admin():
+    email = current_email()
+    if not email:
+        return None, auth_error()
+    if email != ADMIN_EMAIL:
+        return None, (jsonify({
+            "success": False,
+            "message": "Ye sirf admin ke liye hai"
+        }), 403)
+    return email, None
 
 
 # Send email using Google Apps Script (free, works on Render free plan)
@@ -243,10 +306,14 @@ def login():
             "message": "Email ya password galat hai"
         }), 401
 
+    token = serializer.dumps({"email": email}) if serializer else None
+
     return jsonify({
         "success": True,
         "message": "Login successful",
-        "university": row[1]
+        "university": row[1],
+        "email": email,
+        "token": token
     })
 
 
@@ -334,6 +401,154 @@ def reset_password():
     return jsonify({
         "success": True,
         "message": "Password updated"
+    })
+
+
+# =====================================================
+#                    PREMIUM ROUTES
+# =====================================================
+
+# User: premium hai ya nahi + payment request ka status
+@app.route("/premium-status", methods=["GET"])
+def premium_status():
+
+    email = current_email()
+    if not email:
+        return auth_error()
+
+    row = db_run(
+        "SELECT is_premium FROM users WHERE email = %s",
+        (email,),
+        fetch=True
+    )
+    if not row:
+        return auth_error()
+
+    req = db_run(
+        "SELECT status, utr FROM payment_requests WHERE email = %s",
+        (email,),
+        fetch=True
+    )
+
+    return jsonify({
+        "success": True,
+        "email": email,
+        "premium": bool(row[0]),
+        "request_status": req[0] if req else None,
+        "utr": req[1] if req else None,
+        "is_admin": email == ADMIN_EMAIL
+    })
+
+
+# User: UTR bhejna (payment karne ke baad)
+@app.route("/payment-request", methods=["POST"])
+def payment_request():
+
+    email = current_email()
+    if not email:
+        return auth_error()
+
+    data = request.get_json(silent=True) or {}
+    utr = (data.get("utr") or "").strip()
+
+    if not re.fullmatch(r"\d{12}", utr):
+        return jsonify({
+            "success": False,
+            "message": "UTR 12 digit ka number hona chahiye"
+        }), 400
+
+    row = db_run(
+        "SELECT is_premium FROM users WHERE email = %s",
+        (email,),
+        fetch=True
+    )
+    if not row:
+        return auth_error()
+
+    if row[0]:
+        return jsonify({
+            "success": False,
+            "message": "Premium pehle se active hai"
+        }), 400
+
+    try:
+        db_run(
+            "INSERT INTO payment_requests (email, utr, amount, status) "
+            "VALUES (%s, %s, %s, 'pending') "
+            "ON CONFLICT (email) DO UPDATE SET "
+            "utr = EXCLUDED.utr, amount = EXCLUDED.amount, "
+            "status = 'pending', created_at = NOW()",
+            (email, utr, PREMIUM_PRICE)
+        )
+
+    except psycopg2.IntegrityError:
+        return jsonify({
+            "success": False,
+            "message": "Ye UTR pehle use ho chuka hai"
+        }), 409
+
+    return jsonify({
+        "success": True,
+        "message": "Payment request mil gayi"
+    })
+
+
+# Admin: pending requests ki list
+@app.route("/admin/payment-requests", methods=["GET"])
+def admin_payment_requests():
+
+    admin, err = require_admin()
+    if err:
+        return err
+
+    rows = db_run(
+        "SELECT email, utr, amount FROM payment_requests "
+        "WHERE status = 'pending' ORDER BY created_at",
+        fetch="all"
+    )
+
+    return jsonify({
+        "success": True,
+        "requests": [
+            {"email": r[0], "utr": r[1], "amount": r[2]} for r in rows
+        ]
+    })
+
+
+# Admin: approve ya reject
+@app.route("/admin/decide", methods=["POST"])
+def admin_decide():
+
+    admin, err = require_admin()
+    if err:
+        return err
+
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    approve = bool(data.get("approve"))
+
+    pending = db_run(
+        "SELECT 1 FROM payment_requests WHERE email = %s AND status = 'pending'",
+        (email,),
+        fetch=True
+    )
+    if not pending:
+        return jsonify({
+            "success": False,
+            "message": "Pending request nahi mili"
+        }), 404
+
+    if approve:
+        db_run("UPDATE users SET is_premium = TRUE WHERE email = %s", (email,))
+
+    db_run(
+        "UPDATE payment_requests SET status = %s WHERE email = %s",
+        ("approved" if approve else "rejected", email)
+    )
+
+    return jsonify({
+        "success": True,
+        "message": "Approved" if approve else "Rejected"
     })
 
 
