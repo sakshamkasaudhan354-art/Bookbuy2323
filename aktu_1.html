@@ -97,10 +97,13 @@ footer { text-align: center; padding: 25px; color: #777; margin-top: 50px; }
         <p>Year → Branch → PYQ Year (2015 – 2025) → Questions.</p>
     </div>
 
+    <!-- FIX 1: breadcrumb element (pehle missing tha) -->
+    <div class="breadcrumb" id="breadcrumb"></div>
+
     <!-- PREMIUM BUTTON -->
     <div class="premium-bar">
-        <span>⭐ <b>Bookbuy Premium Version</b> — Solutions aur extra resources's unlock</span>
-        <button class="premium-open" onclick="openPremium()">Premium</button>
+        <span id="premiumText">⭐ <b>Bookbuy Premium Version</b> — Solutions aur extra resources unlock karo</span>
+        <button class="premium-open" id="premiumBtn" onclick="openPremium()">Premium</button>
     </div>
 
     <!-- 0. STUDY YEAR (1st, 2nd, 3rd, 4th) -->
@@ -133,6 +136,18 @@ footer { text-align: center; padding: 25px; color: #777; margin-top: 50px; }
         <div id="questionList"></div>
     </section>
 
+    <!-- PREMIUM: SEMESTER -->
+    <section id="semSection" class="hidden">
+        <h2 class="section-title">Premium: Select Semester</h2>
+        <div class="grid" id="semGrid"></div>
+    </section>
+
+    <!-- PREMIUM: SEMESTER -> BRANCH -->
+    <section id="semBranchSection" class="hidden">
+        <h2 class="section-title">Select Branch</h2>
+        <div class="grid" id="semBranchGrid"></div>
+    </section>
+
 </div>
 
 <!-- PREMIUM POPUP -->
@@ -142,8 +157,9 @@ footer { text-align: center; padding: 25px; color: #777; margin-top: 50px; }
         <h2>Bookbuy Premium</h2>
         <p class="pm-sub">Unlock Premium PYQ Resources</p>
 
-        <ul class="pm-Benefits" id="pmBenefits"></ul>
-    <div class="pm-Price" id="pmPrice"></div>
+        <!-- FIX 2: class names small letters mein -->
+        <ul class="pm-benefits" id="pmBenefits"></ul>
+        <div class="pm-price" id="pmPrice"></div>
         <p class="pm-once">One-time payment</p>
         <button class="pm-pay" id="pmPay" onclick="goToPayment()"></button>
     </div>
@@ -154,18 +170,21 @@ footer { text-align: center; padding: 25px; color: #777; margin-top: 50px; }
 <script>
 const $ = id => document.getElementById(id);
 
+/* esc function upar rakha (safe) */
+const esc = t => String(t)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 /* ============================================================
    PREMIUM SETTINGS  (yahan badlo)
    ============================================================ */
 const PREMIUM_PRICE = 50;               // price (₹)
 const PAYMENT_PAGE  = "payment.html";   // Pay button dabane par yeh page khulega
 
-/* Premium ke fayde — yahan apne hisaab se likho / badlo / add karo */
 const PREMIUM_BENEFITS = [
-    "Semster wise pyq with solutions",
+    "Semester wise PYQ with solutions",
     "Unit wise short and long questions",
-    "Imp Exam orinted qquestions with solutions",
-    "topppers Notes",
+    "Important exam oriented questions with solutions",
+    "Toppers notes"
 ];
 
 function openPremium() {
@@ -179,12 +198,10 @@ function goToPayment() { window.location.href = PAYMENT_PAGE; }
 $("pmOverlay").addEventListener("click", e => { if (e.target.id === "pmOverlay") closePremium(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closePremium(); });
 
-const esc = t => String(t)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
 /* ---------- BRANCHES + SPECIALISATIONS ---------- */
+/* FIX 3: duplicate "CSE AI/ML" hata diya */
 const branches = {
-    "CSE": ["CSE Core", "CSE AI & ML", "CSE Data Science", "CSE Cyber Security", "CSE AI/ML"],
+    "CSE": ["CSE Core", "CSE AI & ML", "CSE Data Science", "CSE Cyber Security"],
     "IT": [],
     "ECE": [],
     "EE": [],
@@ -203,19 +220,20 @@ for (let y = 2015; y <= 2025; y++) YEARS.push(String(y));
 
 /* ---------- PYQ DATABASE ----------
    addPYQ(studyYear, branch, specialisation, pyqYear, {
-       short: [ { q: "Question", a: "Answer" } ],
-       long:  [ { q: "Question", a: "Answer" } ]
+       short: [ { q: "Question", a: "Solution" } ],
+       long:  [ { q: "Question", a: "Solution" } ]
    });
 
    Specialisation na ho (jaise IT, ECE) to "" likho.
    studyYear = 1, 2, 3 ya 4 (number)
-   Example: addPYQ(2, "IT", "", "2024", { short: [...], long: [...] });
 */
 const PYQ = {};
 const keyOf = (study, branch, special, year) => [study, branch, special, year].join("|");
 function addPYQ(study, branch, special, year, data) { PYQ[keyOf(study, branch, special, year)] = data; }
 
-/* ---------- ADD QUESTIONS HERE ---------- */
+/* ============================================================
+   ADD QUESTIONS HERE
+   ============================================================ */
 
 addPYQ(1, "CSE", "CSE Core", "2025", {
     short: [
@@ -263,13 +281,27 @@ addPYQ(2, "CSE", "CSE AI & ML", "2025", {
     ]
 });
 
+/* ---- NAYA YEAR / BRANCH ADD KARNE KA TEMPLATE (copy karke values badlo) ----
+
+addPYQ(1, "CSE", "CSE Core", "2024", {
+    short: [
+        { q: "Pehla short question?", a: "Solution yahan likho." },
+        { q: "Dusra short question?", a: "Solution yahan likho." }
+    ],
+    long: [
+        { q: "Pehla long question?", a: "Solution yahan likho." }
+    ]
+});
+
+----------------------------------------------------------------- */
+
 /* ---------- STATE ---------- */
 let selectedStudy = 0;     // 1, 2, 3, 4
 let selectedBranch = "";
 let selectedSpecial = "";
 let selectedYear = "";
 
-const SECTIONS = ["studyYearSection", "branchSection", "specialSection", "yearSection", "questionSection"];
+const SECTIONS = ["studyYearSection", "branchSection", "specialSection", "yearSection", "questionSection", "semSection", "semBranchSection"];
 
 function showSection(id) {
     SECTIONS.forEach(s => $(s).classList.toggle("hidden", s !== id));
@@ -287,9 +319,10 @@ function makeItem(grid, title, sub, onClick) {
 }
 
 /* ---------- FLOW ----------
-   Branch -> (Specialisation) -> Year -> PYQ (Short + Long) */
+   Study Year -> Branch -> (Specialisation) -> PYQ Year -> Questions (Short + Long) */
 
 function showStudyYears() {
+    premiumMode = false;
     const grid = $("studyYearGrid");
     grid.innerHTML = "";
     STUDY_YEARS.forEach((y, i) =>
@@ -341,7 +374,7 @@ function selectYear(year) {
     showQuestions();
 }
 
-/* Short ya Long ki list banata hai */
+/* Short ya Long ki list banata hai (har question ke saath "Solution" button) */
 function renderCards(parent, questions) {
     questions.forEach((item, i) => {
         const card = document.createElement("div");
@@ -353,16 +386,16 @@ function renderCards(parent, questions) {
                     <h3>Q${i + 1}.</h3>
                     <p>${esc(item.q)}</p>
                 </div>
-                <button class="ans-btn">Show Answer</button>
+                <button class="ans-btn">Solution</button>
             </div>
-            <div class="answer-box hidden"><b>Answer:</b> ${esc(item.a || "Answer coming soon.")}</div>
+            <div class="answer-box hidden"><b>Solution:</b> ${esc(item.a || "Solution coming soon.")}</div>
         `;
 
         const btn = card.querySelector(".ans-btn");
         const box = card.querySelector(".answer-box");
         btn.onclick = () => {
             const open = box.classList.toggle("hidden") === false;
-            btn.textContent = open ? "Hide Answer" : "Show Answer";
+            btn.textContent = open ? "Hide" : "Solution";
         };
         parent.appendChild(card);
     });
@@ -405,10 +438,96 @@ function showQuestions() {
     }
 }
 
+/* ============================================================
+   PREMIUM (SEMESTER WISE)
+   Payment hone par payment.html "bookbuy_premium" = "yes" save karta hai
+   ============================================================ */
+let premiumMode = false;
+let selectedSem = 0;
+
+/* Premium Render backend se aata hai (neeche wale script mein set hota hai) */
+function isPremium() { return window.bookbuyPremium === true; }
+
+function updatePremiumUI() {
+    if (isPremium()) {
+        $("premiumText").innerHTML = "⭐ <b>Premium Active</b> — Semester wise PYQ with solutions unlock hai";
+        $("premiumBtn").textContent = "Semester PYQ";
+        $("premiumBtn").onclick = showSemesters;
+    } else {
+        $("premiumText").innerHTML = "⭐ <b>Bookbuy Premium Version</b> — Solutions aur extra resources unlock karo";
+        $("premiumBtn").textContent = "Premium";
+        $("premiumBtn").onclick = openPremium;
+    }
+}
+
+/* addSemPYQ(semester, branch, { short: [...], long: [...] }) */
+const SEM_PYQ = {};
+const semKey = (sem, branch) => sem + "|" + branch;
+function addSemPYQ(sem, branch, data) { SEM_PYQ[semKey(sem, branch)] = data; }
+
+/* ---------- SEMESTER QUESTIONS YAHAN ADD KARO ---------- */
+addSemPYQ(3, "CSE", {
+    short: [
+        { q: "What is a data structure?",
+          a: "Data ko organize karke store karne ka tarika. Jaise array, stack, queue." }
+    ],
+    long: [
+        { q: "Explain stack with operations.",
+          a: "Stack LIFO follow karta hai.\nPush: element add.\nPop: element remove.\nPeek: top dekhna." }
+    ]
+});
+
+function showSemesters() {
+    if (!isPremium()) { openPremium(); return; }
+    premiumMode = true;
+    const grid = $("semGrid");
+    grid.innerHTML = "";
+    for (let i = 1; i <= 8; i++)
+        makeItem(grid, "Semester " + i, "Select Semester " + i, () => { selectedSem = i; showSemBranches(); });
+    showSection("semSection");
+    setBreadcrumb("Premium");
+}
+
+function showSemBranches() {
+    const grid = $("semBranchGrid");
+    grid.innerHTML = "";
+    Object.keys(branches).forEach(b =>
+        makeItem(grid, b, "Semester " + selectedSem + " – " + b, () => showSemQuestions(b)));
+    showSection("semBranchSection");
+    setBreadcrumb("Premium", "Semester " + selectedSem);
+}
+
+function showSemQuestions(branch) {
+    const list = $("questionList");
+    const data = SEM_PYQ[semKey(selectedSem, branch)] || {};
+    const shortQ = data.short || [];
+    const longQ = data.long || [];
+
+    $("questionHeading").textContent = "Semester " + selectedSem + " – " + branch + " | Premium PYQ";
+    list.innerHTML = "";
+    showSection("questionSection");
+    setBreadcrumb("Premium", "Semester " + selectedSem, branch);
+
+    if (!shortQ.length && !longQ.length) {
+        list.innerHTML = `<div class="empty"><h3>Questions Coming Soon!</h3><p>We are adding PYQ questions for this section.</p></div>`;
+        return;
+    }
+    [["Short Questions", shortQ], ["Long Questions", longQ]].forEach(([title, arr]) => {
+        if (!arr.length) return;
+        const h = document.createElement("h3");
+        h.className = "sub-title";
+        h.textContent = title;
+        list.appendChild(h);
+        renderCards(list, arr);
+    });
+}
+
 /* ---------- BACK ---------- */
 function goBack() {
     switch (visibleSection()) {
-        case "questionSection": showYears(); break;
+        case "semSection": showStudyYears(); break;
+        case "semBranchSection": showSemesters(); break;
+        case "questionSection": premiumMode ? showSemBranches() : showYears(); break;
         case "yearSection": selectedSpecial ? showSpecialisations() : showBranches(); break;
         case "specialSection": showBranches(); break;
         case "branchSection": showStudyYears(); break;
@@ -416,6 +535,26 @@ function goBack() {
 }
 
 showStudyYears();
+</script>
+
+<!-- PREMIUM CHECK (Render backend se) -->
+<script>
+const BB_API = "https://bookbuy2323.onrender.com";
+(async function () {
+    window.bookbuyPremium = false;
+    const token = localStorage.getItem("bookbuy_token");
+    if (token) {
+        try {
+            const res = await fetch(BB_API + "/premium-status", {
+                headers: { Authorization: "Bearer " + token }
+            });
+            if (res.status === 401) localStorage.removeItem("bookbuy_token");
+            const data = await res.json();
+            window.bookbuyPremium = data.premium === true;
+        } catch (e) { console.error("Premium check error:", e); }
+    }
+    updatePremiumUI();
+})();
 </script>
 
 </body>
