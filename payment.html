@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment | Bookbuy</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: #f4f6fb; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.box { background: white; max-width: 380px; width: 100%; border-radius: 16px; padding: 28px 22px; text-align: center; box-shadow: 0 5px 25px #00000015; }
+h2 { color: #172554; margin-bottom: 6px; }
+.sub { color: #666; margin-bottom: 10px; font-size: 14px; }
+.price { font-size: 40px; font-weight: bold; color: #172554; margin: 6px 0 10px; }
+.who { color: #64748b; font-size: 13px; margin-bottom: 12px; }
+.qr { width: 210px; max-width: 100%; border: 1px solid #e1e5ee; border-radius: 10px; padding: 6px; }
+.upi { margin: 10px 0; font-size: 14px; color: #333; }
+.upibtn { display: block; background: #16a34a; color: white; text-decoration: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 14px; }
+.step { font-size: 14px; color: #444; margin-bottom: 8px; text-align: left; }
+input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
+#utr { letter-spacing: 1px; text-align: center; }
+button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 6px; }
+.pay { background: #00b4d8; color: white; }
+.pay:hover { background: #0096b4; }
+.back { background: none; color: #64748b; font-size: 14px; font-weight: normal; margin-top: 10px; }
+.msg { margin-top: 12px; font-size: 14px; min-height: 18px; }
+.ok { color: #166534; } .err { color: #b91c1c; }
+.status { background: #fef9c3; border: 1px solid #fde047; border-radius: 10px; padding: 14px; font-size: 14px; color: #713f12; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Bookbuy Premium</h2>
+    <p class="sub">Semester wise PYQ with solutions</p>
+    <div class="price" id="price"></div>
+    <p class="who" id="who"></p>
+
+    <!-- LOGIN (agar login nahi hai) -->
+    <div id="loginArea" style="display:none">
+        <p class="step">Premium lene ke liye apne Bookbuy account se login karo:</p>
+        <input type="email" id="lemail" placeholder="Email">
+        <input type="password" id="lpass" placeholder="Password">
+        <button class="pay" id="loginBtn">Login</button>
+    </div>
+
+    <!-- PAYMENT FORM -->
+    <div id="payArea" style="display:none">
+        <img class="qr" id="qr" src="qr.png" alt="UPI QR Code">
+        <p class="upi">UPI ID: <b id="upiId"></b></p>
+        <a class="upibtn" id="upiLink" href="#">📱 UPI app se pay karo (mobile)</a>
+
+        <p class="step">Pay karne ke baad apna <b>12 digit UTR / Transaction ID</b> yahan daalo:</p>
+        <input id="utr" maxlength="12" inputmode="numeric" placeholder="123456789012">
+        <button class="pay" id="submitBtn">Payment Submit Karo</button>
+    </div>
+
+    <!-- STATUS -->
+    <div id="statusArea" class="status" style="display:none"></div>
+
+    <button class="back" id="backBtn">← Wapas jao</button>
+    <p class="msg" id="msg"></p>
+</div>
+
+<script>
+/* ============================================================
+   SETTINGS (yahan badlo)
+   ============================================================ */
+const API         = "https://bookbuy2323.onrender.com";
+const PRICE       = 50;                  // ₹
+const UPI_ID      = "yourname@upi";      // APNA UPI ID
+const PAYEE_NAME  = "Bookbuy";
+const RETURN_PAGE = "aktu_1.html";
+/* QR image: apna UPI QR "qr.png" naam se isi folder mein rakho */
+
+const $ = id => document.getElementById(id);
+const token = () => localStorage.getItem("bookbuy_token");
+
+$("price").textContent = "₹" + PRICE;
+$("upiId").textContent = UPI_ID;
+$("upiLink").href = "upi://pay?pa=" + encodeURIComponent(UPI_ID) + "&pn=" + encodeURIComponent(PAYEE_NAME) + "&am=" + PRICE + "&cu=INR&tn=" + encodeURIComponent("Bookbuy Premium");
+$("backBtn").onclick = () => { window.location.href = RETURN_PAGE; };
+
+function say(text, ok) { $("msg").textContent = text; $("msg").className = "msg " + (ok ? "ok" : "err"); }
+
+function show(id) {
+    ["loginArea", "payArea", "statusArea"].forEach(x => { $(x).style.display = (x === id) ? "block" : "none"; });
+}
+
+async function api(path, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+    if (token()) opts.headers.Authorization = "Bearer " + token();
+    try {
+        const res = await fetch(API + path, opts);
+        let data = {};
+        try { data = await res.json(); } catch (e) {}
+        return { status: res.status, data: data };
+    } catch (e) {
+        return { status: 0, data: { message: "Server se connect nahi ho paya. 1 minute baad dobara try karo." } };
+    }
+}
+
+async function init() {
+    if (!token()) { show("loginArea"); return; }
+
+    say("Check ho raha hai...", true);
+    const r = await api("/premium-status");
+
+    if (r.status === 401) {
+        localStorage.removeItem("bookbuy_token");
+        show("loginArea");
+        say("", true);
+        return;
+    }
+    if (r.status === 0 || !r.data.success) { say(r.data.message || "Kuch gadbad hui.", false); return; }
+
+    say("", true);
+    $("who").textContent = "Login: " + r.data.email;
+
+    if (r.data.premium) {
+        show("statusArea");
+        $("statusArea").innerHTML = "✔ Is account pe Premium active hai.";
+        setTimeout(() => { window.location.href = RETURN_PAGE; }, 1200);
+        return;
+    }
+    if (r.data.request_status === "pending") {
+        show("statusArea");
+        $("statusArea").innerHTML = "⏳ Tumhari payment check ho rahi hai.<br>UTR: <b>" + r.data.utr + "</b><br>Approve hote hi Premium khul jayega. Thodi der baad page refresh karo.";
+        return;
+    }
+    if (r.data.request_status === "rejected") {
+        say("Pichli payment verify nahi hui. Sahi UTR ke saath dobara submit karo.", false);
+    }
+    show("payArea");
+}
+
+$("loginBtn").addEventListener("click", async () => {
+    const email = $("lemail").value.trim().toLowerCase();
+    const password = $("lpass").value;
+    if (!email || !password) { say("Email aur password daalo.", false); return; }
+    say("Login ho raha hai...", true);
+    const r = await api("/login", { method: "POST", body: JSON.stringify({ email: email, password: password }) });
+    if (!r.data.success) { say(r.data.message || "Login nahi hua.", false); return; }
+    if (!r.data.token) { say("Server update nahi hua. Pehle naya otp.py deploy karo.", false); return; }
+    localStorage.setItem("bookbuy_token", r.data.token);
+    init();
+});
+
+$("submitBtn").addEventListener("click", async () => {
+    const utr = $("utr").value.trim();
+    if (!/^\d{12}$/.test(utr)) { say("UTR 12 digit ka number hona chahiye.", false); return; }
+    say("Submit ho raha hai...", true);
+    const r = await api("/payment-request", { method: "POST", body: JSON.stringify({ utr: utr }) });
+    if (!r.data.success) { say(r.data.message || "Submit nahi hua.", false); return; }
+    say("", true);
+    show("statusArea");
+    $("statusArea").innerHTML = "✔ Submit ho gaya!<br>UTR: <b>" + utr + "</b><br>Payment check hote hi Premium khul jayega.";
+});
+
+init();
+</script>
+
+</body>
+</html>
