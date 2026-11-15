@@ -62,7 +62,11 @@ async function load() {
 
     const r = await api("/admin/payment-requests");
     if (r.status === 401) { localStorage.removeItem("bookbuy_token"); load(); return; }
-    if (r.status === 403) { $("list").innerHTML = '<div class="empty">Ye page sirf admin ke liye hai.</div>'; return; }
+    if (r.status === 403) {
+        $("list").innerHTML = '<div class="empty">Ye page sirf admin ke liye hai.<br><br><button id="logoutBtn" style="max-width:260px">Dusre account se login karo</button></div>';
+        $("logoutBtn").onclick = () => { localStorage.removeItem("bookbuy_token"); load(); };
+        return;
+    }
     if (!r.data.success) { $("list").innerHTML = '<div class="empty">' + esc(r.data.message || "Error") + '</div>'; return; }
 
     $("who").textContent = "Admin panel";
