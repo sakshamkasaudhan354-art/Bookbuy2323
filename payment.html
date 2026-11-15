@@ -45,7 +45,8 @@ button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size
 
     <!-- PAYMENT FORM -->
     <div id="payArea" style="display:none">
-        <img class="qr" id="qr" src="qr.png" alt="UPI QR Code">
+        <img class="qr" id="qr" src="qr.jpeg" alt="UPI QR Code">
+        <div class="qr" id="qrBox" style="display:none; width:auto; padding:10px; background:white;"></div>
         <p class="upi">UPI ID: <b id="upiId"></b></p>
         <a class="upibtn" id="upiLink" href="#">📱 UPI app se pay karo (mobile)</a>
 
@@ -61,6 +62,7 @@ button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size
     <p class="msg" id="msg"></p>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 /* ============================================================
    SETTINGS (yahan badlo)
@@ -70,7 +72,7 @@ const PRICE       = 50;                  // ₹
 const UPI_ID      = "yourname@upi";      // APNA UPI ID
 const PAYEE_NAME  = "Bookbuy";
 const RETURN_PAGE = "aktu_1.html";
-/* QR image: apna UPI QR "qr.png" naam se isi folder mein rakho */
+/* QR image: apna UPI QR "qr.jpeg" naam se isi folder mein rakho */
 
 const $ = id => document.getElementById(id);
 const token = () => localStorage.getItem("bookbuy_token");
@@ -78,6 +80,17 @@ const token = () => localStorage.getItem("bookbuy_token");
 $("price").textContent = "₹" + PRICE;
 $("upiId").textContent = UPI_ID;
 $("upiLink").href = "upi://pay?pa=" + encodeURIComponent(UPI_ID) + "&pn=" + encodeURIComponent(PAYEE_NAME) + "&am=" + PRICE + "&cu=INR&tn=" + encodeURIComponent("Bookbuy Premium");
+/* qr.jpeg mil jaye to wahi dikhega. Na mile to UPI ID se QR khud ban jayega */
+function makeQR() {
+    $("qr").style.display = "none";
+    $("qrBox").style.display = "inline-block";
+    if ($("qrBox").childElementCount) return;
+    try { new QRCode($("qrBox"), { text: $("upiLink").href, width: 190, height: 190 }); }
+    catch (e) { $("qrBox").textContent = "QR nahi bana. Upar wale UPI ID se pay karo."; }
+}
+$("qr").onerror = makeQR;
+if ($("qr").complete && $("qr").naturalWidth === 0) makeQR();
+
 $("backBtn").onclick = () => { window.location.href = RETURN_PAGE; };
 
 function say(text, ok) { $("msg").textContent = text; $("msg").className = "msg " + (ok ? "ok" : "err"); }
