@@ -25,6 +25,12 @@ button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size
 .msg { margin-top: 12px; font-size: 14px; min-height: 18px; }
 .ok { color: #166534; } .err { color: #b91c1c; }
 .status { background: #fef9c3; border: 1px solid #fde047; border-radius: 10px; padding: 14px; font-size: 14px; color: #713f12; line-height: 1.6; }
+
+/* Password eye icon */
+.pw { position: relative; margin-bottom: 10px; }
+.pw input { margin-bottom: 0; padding-right: 46px; }
+.eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; margin: 0; padding: 0; background: none; display: flex; align-items: center; justify-content: center; }
+.eye svg { width: 22px; height: 22px; stroke: #64748b; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 </style>
 </head>
 <body>
@@ -39,7 +45,12 @@ button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size
     <div id="loginArea" style="display:none">
         <p class="step">Premium lene ke liye apne Bookbuy account se login karo:</p>
         <input type="email" id="lemail" placeholder="Email">
-        <input type="password" id="lpass" placeholder="Password">
+        <div class="pw">
+            <input type="password" id="lpass" placeholder="Password">
+            <button type="button" class="eye" id="eyeBtn" aria-label="Show password">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+        </div>
         <button class="pay" id="loginBtn">Login</button>
     </div>
 
@@ -50,15 +61,15 @@ button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size
         <p class="upi">UPI ID: <b id="upiId"></b></p>
         <a class="upibtn" id="upiLink" href="#">📱 UPI app se pay karo (mobile)</a>
 
-        <p class="step">Pay karne ke baad apna <b>12 digit UTR / Transaction ID</b> yahan daalo:</p>
+        <p class="step"> <b>12 digit UTR / Transaction ID</b> </p>
         <input id="utr" maxlength="12" inputmode="numeric" placeholder="123456789012">
-        <button class="pay" id="submitBtn">Payment Submit Karo</button>
+        <button class="pay" id="submitBtn">Payment Submit</button>
     </div>
 
     <!-- STATUS -->
     <div id="statusArea" class="status" style="display:none"></div>
 
-    <button class="back" id="backBtn">← Wapas jao</button>
+    <button class="back" id="backBtn">Return</button>
     <p class="msg" id="msg"></p>
 </div>
 
@@ -80,7 +91,7 @@ const token = () => localStorage.getItem("bookbuy_token");
 $("price").textContent = "₹" + PRICE;
 $("upiId").textContent = UPI_ID;
 $("upiLink").href = "upi://pay?pa=" + encodeURIComponent(UPI_ID) + "&pn=" + encodeURIComponent(PAYEE_NAME) + "&am=" + PRICE + "&cu=INR&tn=" + encodeURIComponent("Bookbuy Premium");
-/* qr.jpeg mil jaye to wahi dikhega. Na mile to UPI ID se QR khud ban jayega */
+
 function makeQR() {
     $("qr").style.display = "none";
     $("qrBox").style.display = "inline-block";
@@ -169,6 +180,17 @@ $("submitBtn").addEventListener("click", async () => {
     show("statusArea");
     $("statusArea").innerHTML = "✔ Submit ho gaya!<br>UTR: <b>" + utr + "</b><br>Payment check hote hi Premium khul jayega.";
 });
+
+/* Password eye icon */
+const EYE_OPEN = '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF  = '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>';
+
+$("eyeBtn").onclick = () => {
+    const p = $("lpass");
+    const hidden = p.type === "password";
+    p.type = hidden ? "text" : "password";
+    $("eyeBtn").innerHTML = hidden ? EYE_OFF : EYE_OPEN;
+};
 
 init();
 </script>
