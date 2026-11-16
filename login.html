@@ -76,6 +76,40 @@ input:focus {
     border-color: #2563eb;
 }
 
+/* Password eye icon */
+.pw {
+    position: relative;
+}
+
+.pw input {
+    padding-right: 46px;
+}
+
+.eye {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.eye svg {
+    width: 22px;
+    height: 22px;
+    stroke: #64748b;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .login-btn {
     width: 100%;
     padding: 13px;
@@ -130,9 +164,14 @@ input:focus {
 
         <div class="input-group">
             <label>Password</label>
-            <input type="password" id="password"
-                   placeholder="Enter your password"
-                   required>
+            <div class="pw">
+                <input type="password" id="password"
+                       placeholder="Enter your password"
+                       required>
+                <button type="button" class="eye" id="eyeBtn" aria-label="Show password">
+                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
             <div style="text-align:right; margin-top:8px;">
                 <a href="forgot_password.html"
                    style="font-size:13px; color:#2563eb; text-decoration:none;">
@@ -182,6 +221,17 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     alert("Backend se connect nahi ho paya");
   }
 });
+
+/* Password eye icon */
+const EYE_OPEN = '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF  = '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>';
+
+document.getElementById("eyeBtn").onclick = () => {
+  const p = document.getElementById("password");
+  const hidden = p.type === "password";
+  p.type = hidden ? "text" : "password";
+  document.getElementById("eyeBtn").innerHTML = hidden ? EYE_OFF : EYE_OPEN;
+};
 </script>
 
 </body>
